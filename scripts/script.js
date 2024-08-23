@@ -7,7 +7,6 @@ document.getElementById('file').addEventListener('change', async function(event)
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
             let textContent = '';
             for (let i = 0; i < pdf.numPages; i++) {
-                console.log("toma-lhe toma")
                 const page = await pdf.getPage(i + 1);
                 const textContentPage = await page.getTextContent();
                 textContentPage.items.forEach(item => {
