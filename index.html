@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload de Arquivo</title>
+    <style>
+        .output-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <h1>Envio de Arquivo</h1>
@@ -12,31 +27,44 @@
         <input type="file" id="file" name="file" accept="application/pdf">
     </form>
 
-    <div id="output"></div>
+    <div class="output-container">
+        <button class="copy-button" onclick="copyToClipboard()">Copiar</button>
+        <div id="output"></div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
     <script>
         document.getElementById('file').addEventListener('change', async function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            const arrayBuffer = e.target.result;
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            let textContent = '';
-            for (let i = 0; i < pdf.numPages; i++) {
-                const page = await pdf.getPage(i + 1);
-                const textContentPage = await page.getTextContent();
-                textContentPage.items.forEach(item => {
-                    textContent += item.str + ' ';
-                });
-                textContent += '\n';
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const arrayBuffer = e.target.result;
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    let textContent = '';
+                    for (let i = 0; i < pdf.numPages; i++) {
+                        const page = await pdf.getPage(i + 1);
+                        const textContentPage = await page.getTextContent();
+                        textContentPage.items.forEach(item => {
+                            textContent += item.str + ' ';
+                        });
+                        textContent += '\n';
+                    }
+                    document.getElementById('output').textContent = textContent;
+                };
+                reader.readAsArrayBuffer(file);
             }
-            document.getElementById('output').textContent = textContent;
-        };
-        reader.readAsArrayBuffer(file);
-    }
-});
+        });
+
+        function copyToClipboard() {
+            const outputDiv = document.getElementById('output');
+            const text = outputDiv.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Conteúdo copiado para a área de transferência!');
+            }).catch(err => {
+                console.error('Erro ao copiar para a área de transferência: ', err);
+            });
+        }
     </script>
 </body>
 </html>
