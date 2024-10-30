@@ -1,70 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload de Arquivo</title>
-    <style>
-        .output-container {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-top: 20px;
-            position: relative;
-        }
-        .copy-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-    <h1>Envio de Arquivo</h1>
-    <form id="uploadForm">
-        <label for="file">Escolha um arquivo:</label>
-        <input type="file" id="file" name="file" accept="application/pdf">
-    </form>
-
-    <div class="output-container">
-        <button class="copy-button" onclick="copyToClipboard()">Copiar</button>
-        <div id="output"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/style.css" />
+    <title>Upload File</title>
+  </head>
+  <body>
+    <div class="titulo">
+      <h1>Licitações</h1>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
-    <script>
-        document.getElementById('file').addEventListener('change', async function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    const arrayBuffer = e.target.result;
-                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                    let textContent = '';
-                    for (let i = 0; i < pdf.numPages; i++) {
-                        const page = await pdf.getPage(i + 1);
-                        const textContentPage = await page.getTextContent();
-                        textContentPage.items.forEach(item => {
-                            textContent += item.str + ' ';
-                        });
-                        textContent += '\n';
-                    }
-                    document.getElementById('output').textContent = textContent;
-                };
-                reader.readAsArrayBuffer(file);
-            }
-        });
+    <div>
+      <input type="file" name="file" id="file" />
+    </div>
+    <div id="response"></div>
 
-        function copyToClipboard() {
-            const outputDiv = document.getElementById('output');
-            const text = outputDiv.textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                alert('Conteúdo copiado para a área de transferência!');
-            }).catch(err => {
-                console.error('Erro ao copiar para a área de transferência: ', err);
-            });
-        }
+
+    <script>
+      /*
+        
+        
+        {"orgao_licitante":"CREA - Conselho Regional de Engenharia, Arquitetura e Agronomia","data":"25/10/2024","hora":"08:00","localidade_da_prestacao_dos_serviços":"Curitiba/PR","site_de_disputa":[{"site":"www.gov.br/compras","finalidade":"Envio de propostas e lances"}],"objeto":"Prestação de serviços de planejamento, organização e execução de evento, com fornecimento de insumos [... 1.1 O objeto da licitação é a prestação de serviços de planejamento, organização e execução de evento, com fornecimento de insumos...]","pregao_eletronico":"032/2024","uasg_ou_codigo_acesso":"389088","valor_do_edital":"R$ 388.395,76","modo_de_disputa":"Aberto [... 4.1 Modalidade de disputa: Aberto...]","exclusivo_para_epp/me":"Não [... 3.1 Não haverá exclusividade para microempresas e empresas de pequeno porte...]","subcontratacao":"Não [... §1º É expressamente vedada a subcontratação total do objeto...]","consorcio":"Sim [... 3.6 Consórcio é permitido...]","registro_junto_a_orgaos_de_fiscalizacao":"CADASTUR [... 4.3 Registro junto ao CADASTUR...]","vigencia_do_contrato":"60 dias [... 2.1 O prazo de vigência da contratação é de 60 dias...]","permite_prorrogacao":"Sim [... Parágrafo único: o prazo de vigência será automaticamente prorrogado...]","criterio_de_julgamento":"Menor preço [... 5.1 O critério de julgamento será o menor preço...]","garantia_contratual":"Sim [... 3.5 O edital exige garantia contratual...]","exigencia_de_visita_tecnica":"Não [... 4.2 A visita técnica não é obrigatória...]","garantia_contratual_antes_da_disputa":"Não [... 3.5 Não há exigência de garantia antes da disputa...]","necessario_entrega_de_amostra":"Não [... 4.4 Não há exigência de entrega de amostras...]","necessario_ter_filial_no_local":"Não [... seção.parágrafo ...]","qualificacao_tecnica_atestados":"O edital exige atestados de capacidade técnica que comprovem a execução de serviços semelhantes, correspondendo a pelo menos 50% do objeto licitado [... 5.1 O edital exige que os licitantes apresentem Atestado de Capacidade Técnica...]","prazo_para_impugnacao_e_pedido_de_esclarecimentos":"Até 3 dias úteis antes [... 12.1 A impugnação a este Edital poderá ser interposta em até 03 dias úteis anteriores à data fixada...]","desclassificacao_das_propostas":"Propostas serão desclassificadas por ilegalidade, descumprimento de exigências ou não adequação às especificações [... 6.8 Será desclassificada a proposta que contiver ilegalidade...]","do_recurso":"Prazo de 3 dias úteis [... 8.2 O prazo para apresentação das razões recursais será de 3 dias úteis...]","analise_juridica":"Após análise das cláusulas contratuais do edital e dos documentos enviados, foi verificado que estão em conformidade com a Lei nº 14.133/2021. Não há necessidade de solicitar esclarecimentos, pois todas as cláusulas estão de acordo com as exigências legais e regulamentares da nova Lei de Licitações."}
+        
+        */
+      const file = document.getElementById("file");
+      const response = document.getElementById("response");
+
+      file.addEventListener("change", (e) => {
+        const files = e.target.files;
+        const formData = new FormData();
+
+        formData.append("file", files[0]);
+
+        fetch("https://boss-squirrel-instantly.ngrok-free.app/uploadfile", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+            response.innerHTML = `
+                    <div>
+                        <span>Órgão Licitante:</span>
+                        <span>${data.orgao_licitante}</span>
+                    </div>
+                    <div>
+                        <span>Data:</span>
+                        <span>${data.data}</span>
+                        <span>Hora:</span>
+                        <span>${data.hora}</span>
+                    </div>
+                    <div>
+                        <span>Localidade da Prestação dos Serviços:</span>
+                        <span>${
+                          data.localidade_da_prestacao_dos_servicos
+                        }</span>
+                    </div>
+                    <div>
+                        <span>Site de Disputa:</span>
+                        <span>${data.site_de_disputa[0].site}</span>
+                    </div>
+                    <div>
+                        <span>Objeto:</span>
+                        <span>${data.objeto}</span>
+                    </div>
+                    <div>
+                        <span>Pregão Eletrônico:</span>
+                        <span>${data.pregao_eletronico}</span>
+                    </div>
+                    <div>
+                        <span>UASG ou Código de Acesso:</span>
+                        <span>${data.uasg_ou_codigo_acesso}</span>
+                    </div>
+                    <div>
+                        <span>Valor do Edital:</span>
+                        <span>${data.valor_do_edital}</span>
+                    </div>
+                    <div>
+                        <span>Modo de Disputa:</span>
+                        <span>${data.modo_de_disputa}</span>
+                    </div>
+                    <div>
+                        <span>Exclusivo para EPP/ME:</span>
+                        <span>${data['exclusivo_para_epp/me']}</span>
+                    </div>
+                    <div>
+                        <span>Subcontratação:</span>
+                        <span>${data.subcontratacao}</span>
+                    </div>
+                    <div>
+                        <span>Registro junto a Órgãos de Fiscalização:</span>
+                        <span>${
+                          data.registro_junto_a_orgaos_de_fiscalizacao
+                        }</span>
+                    </div>
+                    <div>
+                        <span>Vigência do Contrato:</span>
+                        <span>${data.vigencia_do_contrato}</span>
+                    </div>
+                    <div>
+                        <span>Permite Prorrogação:</span>
+                        <span>${data.permite_prorrogacao}</span>
+                    </div>
+                    
+                    <div>
+                        <span>Critério de Julgamento:</span>
+                        <span>${data.criterio_de_julgamento}</span>
+                    </div>
+                    <div>
+                        <span>Garantia Contratual:</span>
+                        <span>${data.garantia_contratual}</span>
+
+
+                    </div>
+                    <div>
+                        <span>Exigência de Visita Técnica:</span>
+                        <span>${data.exigencia_de_visita_tecnica}</span>
+                    </div>
+                    <div>
+                        <span>Garantia Contratual antes da Disputa:</span>
+                        <span>${data.garantia_contratual_antes_da_disputa}</span>
+                    </div>
+                    <div>
+                        <span>Necessário Entrega de Amostra:</span>
+                        <span>${data.necessario_entrega_de_amostra}</span>
+                    </div>
+                    <div>
+                        <span>Necessário ter Filial no Local:</span>
+                        <span>${data.necessario_ter_filial_no_local}</span>
+                    </div>
+                    <div>
+                        <span>Qualificação Técnica Atestados:</span>
+                        <span>${data.qualificacao_tecnica_atestados}</span>
+                    </div>
+                    <div>
+                        <span>Prazo para Impugnação e Pedido de Esclarecimentos:</span>
+                        <span>${data.prazo_para_impugnacao_e_pedido_de_esclarecimentos}</span>
+                    </div>
+                    <div>
+                        <span>Desclassificação das Propostas:</span>
+                        <span>${data.desclassificacao_das_propostas}</span>
+                    </div>
+                    <div>
+                        <span>Do Recurso:</span>
+                        <span>${data.do_recurso}</span>
+                    </div>
+                    <div>
+                        <span>Análise Jurídica:</span>
+                        <span>${data.analise_juridica}</span>
+                    </div>
+
+                `;
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      });
     </script>
-</body>
+  </body>
 </html>
